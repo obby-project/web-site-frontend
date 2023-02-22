@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "dotf";
+  src: url("../../public/fonts/Dotf1.ttf");
+}
+
+:root {
+  --primary-blue: #3399ff;
+  --primary-green: #12ad12;
+  --primary-red: #f12236;
+}
+body {
+  font-family: "dotf";
+}
+@layer components {
+  .primary {
+    @apply text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2;
+  }
+  .primary:disabled {
+    @apply cursor-not-allowed text-white bg-blue-400  hover:bg-blue-400 bg-none;
+  }
+
+  .form-section {
+    @apply bg-black/90 p-20  h-full;
+  }
+
+  .form-section label {
+    @apply text-primary-blue mb-8 text-lg;
+  }
+
+  .form-section textarea {
+    @apply uppercase border-none shadow-none bg-primary-blue focus:outline-none focus:border-none;
+  }
+  .form-section input {
+    @apply rounded-none uppercase border-none shadow-none bg-primary-blue focus:outline-none focus:border-none;
+  }
+  .primary {
+    @apply focus:shadow-none focus:outline-none;
+  }
+
+  .btn.primary {
+    @apply hover:opacity-70 transition-opacity focus:shadow-none bg-none hover:bg-transparent rounded-none bg-transparent border-primary-red border text-primary-red uppercase;
+  }
+  .btn:disabled {
+    @apply hover:opacity-100 hover:bg-transparent rounded-none bg-transparent border-primary-red border text-primary-red uppercase;
+  }
+
+  .error-text {
+    @apply text-primary-red text-left text-sm mt-2;
+  }
+
+  .loader {
+    @apply animate-pulse text-primary-red text-lg text-center;
+  }
+}
+
+@keyframes fadeLoader {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+
+  0% {
+    opacity: 0;
+  }
+}
