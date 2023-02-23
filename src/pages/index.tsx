@@ -1,25 +1,47 @@
 import { Inter } from "@next/font/google";
 import { useForm } from "react-hook-form";
 import { Input, Textarea } from "@/ui";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createContext } from "react";
 import { useContext } from "react";
 import Link from "next/link";
+import Image from "next/image";
+
 import { ChevronRightIcon, ChevronLeftIcon } from "@heroicons/react/24/solid";
 
-const url = "http://localhost:8081/api/v1/value-exists";
+const url =
+  process.env.NODE_ENV === "production"
+    ? "https://obby-project.com"
+    : "http://localhost:8081";
 
-const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 const isValueExists = async (key: string, value: string) => {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ key, value }),
-  });
+  try {
+    const res = await fetch(`${url}/api/v1/value-exists`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ key, value }),
+    });
+    return res.json();
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-  return res.json();
+const createUser = async (data: any) => {
+  try {
+    const res = await fetch(`${url}/api/v1/waitlist`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  } catch (error) {
+    console.error(error);
+  }
 };
 export default function Index() {
   return (
@@ -31,24 +53,41 @@ export default function Index() {
 
 const Form = () => {
   const { isFormSubmitted } = useStepper();
-  if (isFormSubmitted) {
-    return <SuccessApplication />;
-  }
-  return (
-    <div>
-      <video width="w-full" height="full" autoPlay loop muted>
-        <source src="/backgrounds/bg-1.mp4" type="video/mp4" />
-        {/* <source src="/bqmovie.ogg" type="video/ogg" /> */}
-        Your browser does not support the video tag.
-      </video>
+  const isMobile = useMediaQuery("(min-width: 280px) and (max-width: 540px)");
+  const isTablet = useMediaQuery("(min-width: 540px) and (max-width: 1024px)");
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [isStepperOpen, setStepperIsOpen] = useState(true);
 
-      <Steps>
-        <Step1 />
-        <Step2 />
-        <Step3 />
-        <Step4 />
-        <Step5 />
-      </Steps>
+  const size = isDesktop ? "desktop-v" : isTablet ? "tablet-v" : "mobile-v";
+  const onEnded = (event: any) => {
+    const video = event.target;
+
+    if (video.ended) {
+      video.loop = true;
+      video.play();
+      setStepperIsOpen(true);
+    }
+    console.log(event);
+  };
+
+  return (
+    <div className="">
+      <VideoComponent onEnded={onEnded} src={`/backgrounds/${size}.mp4`} />
+      {isStepperOpen && (
+        <>
+          {isFormSubmitted ? (
+            <SuccessApplication />
+          ) : (
+            <Steps>
+              <Step1 />
+              <Step2 />
+              <Step3 />
+              <Step4 />
+              <Step5 />
+            </Steps>
+          )}
+        </>
+      )}
     </div>
   );
 };
@@ -96,19 +135,15 @@ export function Steps({ children }: { children: JSX.Element[] }) {
   const { step, steps } = useStepper();
 
   return (
-    <div className="border border-primary-blue w-[55%] h-[55%] absolute top-[50%] translate-y-[-50%] left-[50%] translate-x-[-50%]">
-      <div className="form-section grid items-center">{children[step]}</div>
+    <div className="modal-wrapper">
+      <div className="relative form-section grid items-center">
+        {children[step]}
+      </div>
     </div>
   );
 }
 
-const FormControls = ({
-  isDirty,
-  isValid,
-}: {
-  isValid: boolean;
-  isDirty: boolean;
-}) => {
+const FormControls = () => {
   const { step, steps, changeStep } = useStepper();
 
   const onPrev = (event: any) => {
@@ -122,16 +157,12 @@ const FormControls = ({
   };
   return (
     <div className="form-controls">
-      <button disabled={step <= 0} className="btn primary" onClick={onPrev}>
-        <ChevronLeftIcon className="h-6 w-6 text-primary-red" />
-      </button>
-
       <button
-        disabled={!isValid || !steps?.[step] || step >= steps.length}
-        onClick={onNext}
-        className="btn primary"
+        disabled={step <= 0}
+        className="btn primary absolute left-6 top-6 border-none"
+        onClick={onPrev}
       >
-        <ChevronRightIcon className="h-6 w-6 text-primary-red" />
+        <ChevronLeftIcon className="h-6 w-6 text-primary-red" />
       </button>
     </div>
   );
@@ -151,6 +182,7 @@ export function Step1() {
       web3exp: prevValue ?? "",
     },
   });
+  console.log({ isDirty, isValid });
 
   const submit = (data: any) => {
     if (isValid) {
@@ -161,13 +193,15 @@ export function Step1() {
 
   return (
     <form onSubmit={handleSubmit(submit)}>
-      <div className="mb-6">
-        <label
-          htmlFor="email"
-          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        >
-          Tell us about your experience in WEB-3
-        </label>
+      <div>
+        <div className="">
+          <label
+            htmlFor="email"
+            className="block text-lg font-medium text-gray-900 dark:text-white"
+          >
+            Tell us about your experience in WEB-3
+          </label>
+        </div>
         <Input
           controllerProps={{
             control,
@@ -177,20 +211,20 @@ export function Step1() {
             },
           }}
         />
-        <div className="error-text">
+        <div className="error-text absolute inset-x-0 ">
           {errors.web3exp && errors.web3exp.message}
         </div>
       </div>
-      <div className="grid grid-flow-col justify-between gap-x-2">
+      <div className="grid grid-flow-col justify-center gap-x-2">
         <button
-          disabled={!isDirty || !isValid}
+          disabled={!isValid}
           type="submit"
-          className="btn primary"
+          className="btn primary mt-16 "
         >
-          Enter
+          Next
         </button>
-        <FormControls isDirty={isDirty} isValid={isValid} />
       </div>
+      <FormControls />
     </form>
   );
 }
@@ -219,13 +253,15 @@ export function Step2() {
 
   return (
     <form onSubmit={handleSubmit(submit)}>
-      <div className="mb-6">
-        <label
-          htmlFor="email"
-          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        >
-          Why do you want to help me find Obby?
-        </label>
+      <div>
+        <div className="">
+          <label
+            htmlFor="email"
+            className="block text-lg font-medium text-gray-900 dark:text-white"
+          >
+            Why do you want to help me find Obby?
+          </label>
+        </div>
         <Input
           controllerProps={{
             control,
@@ -235,20 +271,20 @@ export function Step2() {
             },
           }}
         />
-        <div className="error-text">
+        <div className="error-text absolute inset-x-0 ">
           {errors.helpToFind && errors.helpToFind.message}
         </div>
       </div>
-      <div className="grid grid-flow-col justify-between gap-x-2">
+      <div className="grid grid-flow-col justify-center gap-x-2">
         <button
-          disabled={!isDirty || !isValid}
+          disabled={!isValid}
           type="submit"
-          className="btn primary"
+          className="btn primary mt-16 "
         >
-          Enter
+          Next
         </button>
-        <FormControls isDirty={isDirty} isValid={isValid} />
       </div>
+      <FormControls />
     </form>
   );
 }
@@ -256,57 +292,29 @@ export function Step3() {
   const { changeStep, step, saveStep, steps } = useStepper();
   const prevValue = steps?.[step]?.["twitter"] as string;
 
-  const {
-    control,
-    formState: { isDirty, isValid, errors },
-    handleSubmit,
-  } = useForm({
-    mode: "onChange",
-    defaultValues: {
-      twitter: prevValue ?? "",
-    },
-  });
-
-  const submit = (data: any) => {
-    if (isValid) {
-      saveStep({ [step]: data });
-      changeStep(step + 1);
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit(submit)}>
-      <div className="mb-6">
-        <label
-          htmlFor="email"
-          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        >
-          Did you share Obby missing persons announcement?*
-        </label>
-        <Input
-          controllerProps={{
-            control,
-            name: "twitter",
-            rules: {
-              required: "This field is required",
-            },
-          }}
-        />
-        <div className="error-text">
-          {errors.twitter && errors.twitter.message}
+    <div>
+      <div>
+        <div className="">
+          <label
+            htmlFor="email"
+            className="block text-lg font-medium text-gray-900 dark:text-white"
+          >
+            Did you share Obby missing persons announcement?*
+          </label>
         </div>
       </div>
-      <div className="grid grid-flow-col justify-between gap-x-2">
+      <div className="grid grid-flow-col justify-center gap-x-2">
         <button
-          disabled={!isDirty || !isValid}
           type="submit"
-          className="btn primary"
+          className="btn primary mt-16 "
+          onClick={() => changeStep(step + 1)}
         >
-          Enter
+          Next
         </button>
-        <FormControls isDirty={isDirty} isValid={isValid} />
       </div>
-    </form>
+      <FormControls />
+    </div>
   );
 }
 export function Step4() {
@@ -335,13 +343,15 @@ export function Step4() {
 
   return (
     <form onSubmit={handleSubmit(submit)}>
-      <div className="mb-6">
-        <label
-          htmlFor="email"
-          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        >
-          What about your Twitter?*
-        </label>
+      <div>
+        <div className="">
+          <label
+            htmlFor="email"
+            className="block text-lg font-medium text-gray-900 dark:text-white"
+          >
+            What about your Twitter?*
+          </label>
+        </div>
         <Input
           controllerProps={{
             control,
@@ -362,20 +372,20 @@ export function Step4() {
             },
           }}
         />
-        <div className="error-text">
+        <div className="error-text absolute inset-x-0 ">
           {errors.twitterLink && errors.twitterLink.message}
         </div>
       </div>
-      <div className="grid grid-flow-col justify-between gap-x-2">
+      <div className="grid grid-flow-col justify-center gap-x-2">
         <button
-          disabled={!isDirty || !isValid}
+          disabled={!isValid}
           type="submit"
-          className="btn primary"
+          className="btn primary mt-16 "
         >
-          Enter
+          Next
         </button>
-        <FormControls isDirty={isDirty} isValid={isValid} />
       </div>
+      <FormControls />
     </form>
   );
 }
@@ -401,28 +411,31 @@ export function Step5() {
     if (isValid) {
       let preSendData = {} as any;
       for (const item of Object.values(steps ?? {})) {
+        console.log(item);
         preSendData = Object.assign(preSendData, item);
       }
 
       preSendData["wallet"] = data["wallet"];
 
-      await sleep(5000);
+      // await createUser(preSendData);
       setIsFormSubmitted(true);
-      console.log(preSendData);
+      // console.log(preSendData);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(submit)}>
-      <div className="mb-6">
-        <label
-          htmlFor="email"
-          className="block mb-0 text-sm font-medium text-gray-900 dark:text-white"
-        >
-          Lastly, please share your wallet address.*
-        </label>
-        <div className="tip mb-2 text-white/80 text-sm">
-          We'll need this to grant you access
+      <div>
+        <div className="">
+          <label
+            htmlFor="email"
+            className="mb-2 block text-lg font-medium text-gray-900 dark:text-white"
+          >
+            Lastly, please share your wallet address.*
+          </label>
+          <div className="tip  text-white/80 text-sm mb-2">
+            We&apos;ll need this to grant you access
+          </div>
         </div>
         <Input
           readonly={isSubmitting}
@@ -445,20 +458,20 @@ export function Step5() {
             },
           }}
         />
-        <div className="error-text">
+        <div className="error-text absolute inset-x-0 ">
           {errors.wallet && errors.wallet.message}
         </div>
       </div>
       <Loader isLoading={isSubmitting}>
-        <div className="grid grid-flow-col justify-between gap-x-2">
+        <div className="grid grid-flow-col justify-center gap-x-2">
           <button
-            disabled={!isDirty || !isValid || isSubmitting}
+            disabled={!isValid || isSubmitting}
             type="submit"
-            className="btn primary"
+            className="btn primary mt-16"
           >
             Apply
           </button>
-          <FormControls isDirty={isDirty} isValid={isValid} />
+          <FormControls />
         </div>
       </Loader>
     </form>
@@ -467,21 +480,23 @@ export function Step5() {
 
 function SuccessApplication() {
   return (
-    <div className="w-1/2 absolute top-[50%] translate-y-[-50%] left-[50%] translate-x-[-50%]">
-      <div className="text-center">
-        <div className="text-primary-blue text-xl mb-2">
-          Thanks for applying
+    <div className="modal-wrapper">
+      <div className="text-center relative form-section grid items-center">
+        <div>
+          <div className="text-primary-green   lg:text-xl mb-2">
+            Thanks for applying
+          </div>
+          <div className="text-primary-green mb-10   lg:text-xl">
+            You&apos;ll hear from us soon
+          </div>
+          <Link
+            className="py-3 px-5 bg-primary-blue text-white grid max-w-max mx-auto my-0 grid-flow-col gap-2 items-center"
+            href={"https://twitter.com/Obby_project"}
+            target="_blank"
+          >
+            Follow on Twitter
+          </Link>
         </div>
-        <div className="text-primary-blue mb-10 text-sm opacity-60">
-          You'll hear from us soon
-        </div>
-        <Link
-          className="py-3 px-5 bg-primary-red text-white grid max-w-max mx-auto my-0 grid-flow-col gap-2 items-center"
-          href={"https://twitter.com/obbypr0ject"}
-          target="_blank"
-        >
-          Follow on Twitter
-        </Link>
       </div>
     </div>
   );
@@ -494,3 +509,55 @@ const Loader = ({
   isLoading: boolean;
   children: JSX.Element;
 }) => (isLoading ? <div className="loader">Loading...</div> : children);
+
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    window.addEventListener("resize", listener);
+    return () => window.removeEventListener("resize", listener);
+  }, [matches, query]);
+
+  return matches;
+};
+
+function VideoComponent({
+  src,
+  onEnded,
+}: {
+  src: string;
+  onEnded: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const previousUrl = useRef(src);
+
+  useEffect(() => {
+    if (previousUrl.current === src) {
+      return;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+
+    previousUrl.current = url;
+  }, [src]);
+
+  return (
+    <video
+      onEnded={onEnded}
+      ref={videoRef}
+      className="video"
+      autoPlay
+      muted
+      // loop
+    >
+      <source src={src} />
+    </video>
+  );
+}
