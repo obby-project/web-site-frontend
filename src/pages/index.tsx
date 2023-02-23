@@ -531,7 +531,7 @@ function VideoComponent({
   onEnded,
 }: {
   src: string;
-  onEnded: () => void;
+  onEnded: (event: any) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const previousUrl = useRef(src);
