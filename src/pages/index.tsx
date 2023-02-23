@@ -56,7 +56,7 @@ const Form = () => {
   const isMobile = useMediaQuery("(min-width: 280px) and (max-width: 540px)");
   const isTablet = useMediaQuery("(min-width: 540px) and (max-width: 1024px)");
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const [isStepperOpen, setStepperIsOpen] = useState(true);
+  const [isStepperOpen, setStepperIsOpen] = useState(false);
 
   const size = isDesktop ? "desktop-v" : isTablet ? "tablet-v" : "mobile-v";
   const onEnded = (event: any) => {
@@ -417,7 +417,7 @@ export function Step5() {
 
       preSendData["wallet"] = data["wallet"];
 
-      // await createUser(preSendData);
+      await createUser(preSendData);
       setIsFormSubmitted(true);
       // console.log(preSendData);
     }
