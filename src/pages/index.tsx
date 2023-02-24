@@ -77,7 +77,7 @@ const Form = () => {
 
   return (
     <div className="">
-      <VideoComponent onEnded={onEnded} src={`/backgrounds/${size}.mp4`} />
+      <VideoComponent onEnded={onEnded} src={`/backgrounds/${size}.mov`} />
       {isStepperOpen && (
         <>
           {isFormSubmitted ? (
