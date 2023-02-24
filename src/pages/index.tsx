@@ -63,7 +63,6 @@ const Form = () => {
   const isTablet = useMediaQuery("(min-width: 540px) and (max-width: 1024px)");
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [isStepperOpen, setStepperIsOpen] = useState(false);
-  const [toggle, setToggle] = useState(true);
 
   const size = isDesktop ? "desktop-v" : isTablet ? "tablet-v" : "mobile-v";
   const onEnded = (event: any) => {
@@ -76,41 +75,8 @@ const Form = () => {
     }
   };
 
-  const ref = useRef<HTMLAudioElement | null>(null);
-  useEffect(() => {
-    ref.current = new Audio("/audio/obby-audio.mp3");
-    ref.current.autoplay = true;
-  }, []);
-
-  const toggleSound = () => {
-    if (!ref.current) return;
-    const audio = ref.current;
-    if (audio.paused) {
-      audio.play();
-      setToggle(audio.paused);
-      return;
-    }
-
-    audio.pause();
-
-    setToggle(audio.paused);
-  };
-
   return (
     <div className="">
-      <div className="  z-10 ">
-        <div
-          className="right-5 top-5 absolute z-10 hover:cursor-pointer user-select-none"
-          onClick={toggleSound}
-        >
-          {!toggle ? (
-            <SpeakerWaveIcon className="h-7 w-7 text-primary-blue" />
-          ) : (
-            <SpeakerXMarkIcon className="h-7 w-7 text-primary-blue" />
-          )}
-        </div>
-      </div>
-
       <VideoComponent onEnded={onEnded} src={`/backgrounds/${size}.mp4`} />
       {isStepperOpen && (
         <>
@@ -571,6 +537,7 @@ function VideoComponent({
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const previousUrl = useRef(src);
+  const [toggle, setToggle] = useState(true);
 
   useEffect(() => {
     if (previousUrl.current === src) {
@@ -584,16 +551,42 @@ function VideoComponent({
     previousUrl.current = url;
   }, [src]);
 
+  const toggleSound = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+
+    if (!video.muted) {
+      video.muted = true;
+      setToggle(video.muted);
+      return;
+    }
+
+    video.muted = false;
+
+    setToggle(video.muted);
+  };
   return (
-    <video
-      onEnded={onEnded}
-      ref={videoRef}
-      className="video"
-      autoPlay
-      muted
-      // loop
-    >
-      <source src={src} />
-    </video>
+    <div>
+      <div
+        className="right-5 top-5 absolute z-10 hover:cursor-pointer user-select-none"
+        onClick={toggleSound}
+      >
+        {!toggle ? (
+          <SpeakerWaveIcon className="h-7 w-7 text-primary-blue" />
+        ) : (
+          <SpeakerXMarkIcon className="h-7 w-7 text-primary-blue" />
+        )}
+      </div>
+      <video
+        onEnded={onEnded}
+        ref={videoRef}
+        className="video"
+        autoPlay
+        muted
+        // loop
+      >
+        <source src={src} />
+      </video>
+    </div>
   );
 }
