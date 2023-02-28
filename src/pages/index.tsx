@@ -77,7 +77,7 @@ const Form = () => {
 
   return (
     <div className="">
-      <VideoComponent onEnded={onEnded} src={`/backgrounds/${size}.mov`} />
+      <VideoComponent onEnded={onEnded} src={`/backgrounds/${size}.mp4`} />
       {isStepperOpen && (
         <>
           {isFormSubmitted ? (
@@ -536,8 +536,9 @@ function VideoComponent({
   onEnded: (event: any) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>();
   const previousUrl = useRef(src);
-  const [toggle, setToggle] = useState(true);
+  const [toggle, setToggle] = useState(false);
 
   useEffect(() => {
     if (previousUrl.current === src) {
@@ -551,19 +552,25 @@ function VideoComponent({
     previousUrl.current = url;
   }, [src]);
 
-  const toggleSound = () => {
-    if (!videoRef.current) return;
-    const video = videoRef.current;
+  useEffect(() => {
+    audioRef.current = new Audio("/backgrounds/audio.mp3");
 
-    if (!video.muted) {
-      video.muted = true;
-      setToggle(video.muted);
+    audioRef.current.play();
+  }, []);
+
+  const toggleSound = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      audio.play();
+      setToggle(audio.paused);
       return;
     }
 
-    video.muted = false;
+    audio.pause();
 
-    setToggle(video.muted);
+    setToggle(audio.paused);
   };
   return (
     <div>
