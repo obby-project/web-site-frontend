@@ -538,7 +538,7 @@ function VideoComponent({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>();
   const previousUrl = useRef(src);
-  const [toggle, setToggle] = useState(false);
+  const [toggle, setToggle] = useState(true);
 
   useEffect(() => {
     if (previousUrl.current === src) {
@@ -554,8 +554,6 @@ function VideoComponent({
 
   useEffect(() => {
     audioRef.current = new Audio("/backgrounds/audio.mp3");
-
-    audioRef.current.play();
   }, []);
 
   const toggleSound = () => {
