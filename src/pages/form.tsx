@@ -303,6 +303,15 @@ export function Step2() {
 export function Step3() {
   const { changeStep, step, saveStep, steps } = useStepper();
   const prevValue = steps?.[step]?.["twitter"] as string;
+  const [shareTwitterLink, setShareTwitterLink] = useState();
+
+  useEffect(() => {
+    fetch(
+      "https://github.com/obby-project/web-site-frontend/blob/main/config.json"
+    )
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+  }, []);
 
   return (
     <div>
