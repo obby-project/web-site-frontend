@@ -92,8 +92,8 @@ const Form = () => {
             <SuccessApplication />
           ) : (
             <Steps>
-              <Step1 />
-              <Step2 />
+              {/* <Step1 />
+              <Step2 /> */}
               <Step3 />
               <Step4 />
               <Step5 />
@@ -303,14 +303,16 @@ export function Step2() {
 export function Step3() {
   const { changeStep, step, saveStep, steps } = useStepper();
   const prevValue = steps?.[step]?.["twitter"] as string;
-  const [shareTwitterLink, setShareTwitterLink] = useState();
+  const [shareTwitterLink, setShareTwitterLink] = useState<{
+    shareTwitter: string;
+  } | null>(null);
 
   useEffect(() => {
     fetch(
-      "https://github.com/obby-project/web-site-frontend/blob/main/config.json"
+      "https://api.github.com/repos/obby-project/web-site-frontend/contents/config.json"
     )
       .then((res) => res.json())
-      .then((data) => console.log(data));
+      .then((data) => setShareTwitterLink(JSON.parse(atob(data.content))));
   }, []);
 
   return (
@@ -324,7 +326,7 @@ export function Step3() {
             Did you share Obby missing persons announcement?*
           </label>
           <a
-            href="https://twitter.com/intent/retweet?tweet_id=1634881672054284288"
+            href={shareTwitterLink?.shareTwitter ?? ""}
             className="text-white bg-primary-blue inline-block px-2 py-1 twitter-share-button"
             data-show-count="false"
             target={"_blank"}
